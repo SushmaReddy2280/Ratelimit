@@ -1,0 +1,43 @@
+package com.statestreet.ratelimit.controller;
+
+import javax.websocket.server.PathParam;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.statestreet.ratelimit.service.RateLimitService;
+import com.statestreet.ratelimit.util.Constants;
+
+import lombok.extern.slf4j.Slf4j;
+
+@RestController
+@Slf4j
+public class RateLimitController {
+
+	@Autowired
+	private RateLimitService rateLimitService;
+
+	@Value("${gemini.api.key}")
+	private String gemini_api_key;
+
+	@GetMapping(value = "/ratelimit/{rate_limit_type}")
+    public ResponseEntity<Long> getCurrentAvailbleRequests(@PathParam(value = "rate_limit_type") String rate_limit_type) {
+		//log.info("Got request for checking the rate limit");
+		Long currentAvailbleRequests = 0l;
+		if (Constants.REMOTE.equalsIgnoreCase(rate_limit_type)) {
+
+			currentAvailbleRequests = rateLimitService.getCurrentAvailbleRequestsFromRemote(gemini_api_key);
+			
+		}else {
+			currentAvailbleRequests = rateLimitService.getCurrentAvailbleRequestsFromLocal();
+		}
+		return ResponseEntity.ok(currentAvailbleRequests);
+    }
+
+	
+	
+}
